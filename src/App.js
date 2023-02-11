@@ -1,13 +1,14 @@
-import React, { useRef, useState } from "react";
-import ClassCounter from "./Components.js/ClassCounter";
-import Counter from "./Components.js/Counter";
-import PostItem from "./Components.js/PostItem";
-import PostList from "./Components.js/PostList";
-import MyButton from "./Components.js/UI/button/MyButton";
+import React, { useMemo, useRef, useState } from "react";
+import ClassCounter from "./Components/ClassCounter";
+import Counter from "./Components/Counter";
+import PostItem from "./Components/PostItem";
+import PostList from "./Components/PostList";
+import MyButton from "./Components/UI/button/MyButton";
 import "./styles/App.css";
-import MyInput from "./Components.js/UI/input/MyInput";
-import PostForm from "./Components.js/PostForm";
-import MySelect from "./Components.js/UI/select/MySelect";
+import MyInput from "./Components/UI/input/MyInput";
+import PostForm from "./Components/PostForm";
+import MySelect from "./Components/UI/select/MySelect";
+import PostFilter from "./Components/PostFilter";
 
 function App() {
   const [posts, setPosts] = useState([
@@ -16,59 +17,38 @@ function App() {
     {id: 3, title: "b 3", body: "a"},
   ])
 
-  const [selectSorted, setSelectSorted] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filter, setFilter] = useState({sort: "", query: ""});
 
-  function getSortedPosts() {
+  const sortedPosts = useMemo(() => {
     console.log("delete me after")
-    if(selectSorted) {
-      return [...posts].sort((a, b) => a[selectSorted].localeCompare(b[selectSorted]));
+    if(filter.sort) {
+      return [...posts].sort((a, b) => a[filter.sort].localeCompare(b[filter.sort]));
     }
     return posts;
-  }
+  }, [filter.sort, posts]);
 
-  const sortedPosts = getSortedPosts(); 
+  const sortedAndSearchedPosts = useMemo(() => {
+    return sortedPosts.filter(post => post.title.toLowerCase().includes(filter.query.toLowerCase()))
+  }, [filter.query, sortedPosts]);
 
   const createPost = (newPost) => {
     setPosts([...posts, newPost])
   }
-
+ 
   //Получаем post из дочернего компонента
   const removePost = (post) => {
     setPosts(posts.filter(p => p.id !== post.id))
   }
 
-  const sortPosts = (sort) => {
-    setSelectSorted(sort);
-  }
- 
   return (
     <div className="App">
       <PostForm create={createPost}/> 
       <hr style={{margin: "15px 0"}} />
-      <div> 
-        <MyInput 
-          value={searchQuery}
-          onChange={event => setSearchQuery(event.target.value)}
-          placeholder="search..."
-          type="text"
-        />
-        <MySelect
-          value={selectSorted}
-          onChange={sortPosts} 
-          defaultValue="Sort"
-          option={[
-            {value: "title", name: 'by name'},
-            {value: "body", name: 'by description'},
-          ]}
-          />
-      </div>
-      {posts.length !== 0 
-        ? 
-        <PostList remove={removePost} posts={sortedPosts} title="List of posts"></PostList>
-        : 
-        <h1 style={{textAlign: "center"}}>Posts not found</h1>
-    }
+      <PostFilter 
+        filter={filter}
+        setFilter={setFilter}
+      />
+      <PostList remove={removePost} posts={sortedAndSearchedPosts} title="List of posts" />
     </div>
   ); 
 }
