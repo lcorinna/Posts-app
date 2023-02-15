@@ -1,6 +1,6 @@
 import React from "react";
 
-let MySelect = ({option, defaultValue, value, onChange}) => {
+const MySelect = ({option, defaultValue, value, onChange}) => {
 	return (
 		<select 
 			value={value}
